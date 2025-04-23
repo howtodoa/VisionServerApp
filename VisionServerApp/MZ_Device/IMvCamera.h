@@ -18,12 +18,14 @@ public:
     // ch:获取SDK版本号 | en:Get SDK Version
     static const char* GetSDKVersion();
 
-    // ch:枚举设备 | en:Enumerate Device
-    static int EnumDevices(unsigned int nTLayerType, IMV_DeviceList* pstDevList);
+
 
     // ch:判断设备是否可达 | en:Is the device accessible
     static bool IsDeviceAccessible(IMV_DeviceInfo* pstDevInfo, unsigned int nAccessMode);
 #endif
+    // ch:枚举设备 | en:Enumerate Device
+    static int EnumDevices(unsigned int nTLayerType, IMV_DeviceList* pstDevList);
+
     // ch:打开设备 | en:Open Device
     int Open();
 
@@ -103,6 +105,7 @@ public:
 
     std::string GetDeviceSN();
     std::string GetDeviceIp();
+   static std::string GetDeviceIp(IMV_DeviceInfo* Input);
     void SetMainThreadExit(bool input);
 private:
     void* m_hDevHandle;

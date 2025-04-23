@@ -92,16 +92,19 @@ const char* IMvCamera::GetSDKVersion()
     return IMV_GetVersion();
 }
 
-int IMvCamera::EnumDevices(unsigned int nTLayerType, IMV_DeviceList* pstDevList)
-{
-    return IMV_EnumDevices(pstDevList, nTLayerType);
-}
+
 
 bool IMvCamera::IsDeviceAccessible(IMV_DeviceInfo* pstDevInfo, unsigned int nAccessMode)
 {
     return 1;
 }
 #endif
+
+int IMvCamera::EnumDevices(unsigned int nTLayerType, IMV_DeviceList* pstDevList)
+{
+    return IMV_EnumDevices(pstDevList, nTLayerType);
+}
+
 int IMvCamera::Open()
 {
     if (NULL == m_devInfo)
@@ -431,7 +434,10 @@ std::string IMvCamera::GetDeviceIp()
     return str;
 }
 
-
+std::string IMvCamera::GetDeviceIp(IMV_DeviceInfo* Input)
+{
+    return std::string(Input->DeviceSpecificInfo.gigeDeviceInfo.ipAddress);
+}
 
 void IMvCamera::SetMainThreadExit(bool input)
 {

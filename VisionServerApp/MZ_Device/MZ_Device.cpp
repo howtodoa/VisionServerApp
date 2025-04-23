@@ -15,7 +15,7 @@ static void onGetFrame(IMV_Frame* pFrame, void* pUser)
 	}
 	cv::Mat srcMat = pThis->Convert2Mat(&pFrame->frameInfo, pFrame->pData);
 	pThis->m_localcallbackfun(srcMat, NULL);
-	//printf("Get frame blockId = %llu\n", pFrame->frameInfo.blockId);
+	printf("Get frame blockId = %llu\n", pFrame->frameInfo.blockId);
 	return;
 }
 

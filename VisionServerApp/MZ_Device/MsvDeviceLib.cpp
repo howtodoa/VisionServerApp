@@ -1,9 +1,10 @@
+
 #include "pch.h"
-#include "MsvDeviceLib.h"
 #include "MZ_Device.h"
+#include "MsvDeviceLib.h"
 // MathLibrary.cpp : Defines the exported functions for the DLL.
 
-static MV_CC_DEVICE_INFO_LIST m_stDevList;
+static void *m_stDevList = NULL;
 class_net_engine* eng = NULL;
 namespace Mz_CameraConn
 {
@@ -19,19 +20,51 @@ namespace Mz_CameraConn
 
 	MZ_API MsvEnumerateDevics(std::vector<MsvDeviceId>& deviceList)
 	{
-		memset(&m_stDevList, 0, sizeof(MV_CC_DEVICE_INFO_LIST));
-		int nRet = CMvCamera::EnumDevices(MV_GIGE_DEVICE, &m_stDevList);
-		return nRet;
+		if (deviceList[0].m_type == DEVICE_TYPE_HIKVISION)
+		{
+			if (m_stDevList == NULL) {
+				m_stDevList = malloc(sizeof(IMV_DeviceList));
+			}
+			memset(m_stDevList, 0, sizeof(MV_CC_DEVICE_INFO_LIST));
+			int nRet = CMvCamera::EnumDevices(MV_GIGE_DEVICE, (MV_CC_DEVICE_INFO_LIST*)m_stDevList);
+			return nRet;
+		}
+		else
+		{
+			if (m_stDevList == NULL) {
+				m_stDevList = malloc(sizeof(IMV_DeviceList));
+			}
+			memset(m_stDevList, 0, sizeof(IMV_DeviceList));
+			int nRet = IMvCamera::EnumDevices(interfaceTypeGige, (IMV_DeviceList*)m_stDevList);
+			return nRet;
+		}
 	}
 
 	COperation::COperation(MsvDeviceId inputID)
 	{
-		for (int i = 0; i < m_stDevList.nDeviceNum; i++)
+		if (inputID.m_type == DEVICE_TYPE_HIKVISION)
 		{
-			if (CMvCamera::GetDeviceIp(m_stDevList.pDeviceInfo[i]) == inputID.m_ip)
+			auto* devList = (MV_CC_DEVICE_INFO_LIST*)m_stDevList;
+			for (int i = 0; i < devList->nDeviceNum; i++)
 			{
-				eng = new class_net_engine(inputID, m_stDevList.pDeviceInfo[i]);
-				return;
+				if (CMvCamera::GetDeviceIp(devList->pDeviceInfo[i]) == inputID.m_ip)
+				{
+					eng = new class_net_engine(inputID, devList->pDeviceInfo[i]);
+					return;
+				}
+			}
+		}
+		else
+		{
+		
+			auto* devList = (IMV_DeviceList*)m_stDevList;
+			for (int i = 0; i < devList->nDevNum; i++)
+			{
+				if (IMvCamera::GetDeviceIp(&devList->pDevInfo[i]) == inputID.m_ip)
+				{
+					eng = new class_net_engine(inputID, &devList->pDevInfo[i]);
+					return;
+				}
 			}
 		}
 	}

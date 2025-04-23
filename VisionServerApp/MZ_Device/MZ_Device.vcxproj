@@ -72,8 +72,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>D:\HuarayTech\MV Viewer\Development\Include\IMV;D:\MVS\MVS\Development\Includes;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\HuarayTech\MV Viewer\Development\Lib\x64;D:\MVS\MVS\Development\Libraries\win64;$(LibraryPath)</LibraryPath>
+    <IncludePath>E:\My  Download\Typeeasy\MV Viewer\Development\Include\IMV;E:\My  Download\Typeeasy\MVS\Development\Includes;E:\My  Download\machine learning\opencv\build\include\opencv2;E:\My  Download\machine learning\opencv\build\include;$(IncludePath)</IncludePath>
+    <LibraryPath>E:\My  Download\Typeeasy\MV Viewer\Development\Lib\x64;E:\My  Download\Typeeasy\MVS\Development\Libraries\win64;E:\My  Download\machine learning\opencv\build\x64\vc16\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -117,12 +117,14 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>E:\My  Download\machine learning\opencv\build\include;E:\My  Download\machine learning\opencv\build\include\opencv2</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>MvCameraControl.lib;MVSDKmd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>MvCameraControl.lib;MVSDKmd.lib;opencv_world490d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -147,7 +149,9 @@
   <ItemGroup>
     <ClInclude Include="framework.h" />
     <ClInclude Include="MsvDeviceLib.h" />
-    <ClInclude Include="IMvCamera.h" />
+    <ClInclude Include="IMvCamera.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="MvCamera.h" />
     <ClInclude Include="MZ_Device.h" />
     <ClInclude Include="pch.h" />
@@ -155,7 +159,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MsvDeviceLib.cpp" />
-    <ClCompile Include="IMvCamera.cpp" />
+    <ClCompile Include="IMvCamera.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="MvCamera.cpp" />
     <ClCompile Include="MZ_Device.cpp" />
     <ClCompile Include="pch.cpp" />
