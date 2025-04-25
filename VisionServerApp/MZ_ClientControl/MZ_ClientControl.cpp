@@ -2,17 +2,21 @@
 #include "MZ_ClientControl.h"
 #include "CMsvServerComm.h"
 
-static CMsvServerComm *m_ServerComm;
+static CMsvServerComm* m_ServerComm = NULL;
 
-void Mz_ClientControl::ClientOperation::InitSDK(vector<CommPorts>inputs)
+void Mz_ClientControl::ClientOperation::InitSDK(CommPorts inputs)
 {
+	//logError("这是调试信息 from DLLMZ\n");
 	m_ServerComm = new CMsvServerComm(inputs);
 }
 
 void Mz_ClientControl::ClientOperation::FreeSDK()
 {
-	delete m_ServerComm;
-	m_ServerComm = nullptr;
+	if (m_ServerComm != NULL)
+	{
+		delete m_ServerComm;
+		m_ServerComm = NULL;
+	}
 }
 
 void Mz_ClientControl::ClientOperation::StartWork()
@@ -24,8 +28,23 @@ void Mz_ClientControl::ClientOperation::StopWork()
 	m_ServerComm->StopWork();
 }
 
-void Mz_ClientControl::ClientOperation::DoActionFun(string portname,string funname, HValues inputValues, HImages inputImages, HValues* outPutValues, HImages* outPutImages, int* retCode, string* retMsg)
+void Mz_ClientControl::ClientOperation::DoActionFun(CommPorts portname, string funname, HValues inputValues, HImages inputImages, HValues* outPutValues, HImages* outPutImages, int* retCode, string* retMsg,int timeout)
 {
-	m_ServerComm->DoActionFun(portname, funname, inputImages, inputValues, *outPutImages,*outPutValues, *retCode, *retMsg);
+
+	m_ServerComm->DoActionRemoteFun(portname, funname, inputImages, inputValues, *outPutImages, *outPutValues, *retCode, *retMsg,timeout);
+}
+
+void Mz_ClientControl::ClientOperation::RegsiterFunitFun(Callbackfunc	func)
+{
+	m_ServerComm->RegisterActionFun_Local(func);
+}
+
+void Mz_ClientControl::ClientOperation::GetFunList_Remote(CommPorts portname, vector<Callbackfunc>& funList)
+{
+	m_ServerComm->AskActionFunList_Remote(portname, funList);
+}
+void Mz_ClientControl::ClientOperation::GetRemoteCommports(vector<CommPorts>& commports)
+{
+	m_ServerComm->AskRemoteCommports(commports);
 }
 

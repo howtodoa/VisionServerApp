@@ -6,93 +6,412 @@
 using namespace std;
 typedef struct _HValue
 {
-	char m_Valuetype[64] = {0};
+	char m_Valuetype[32] = {0};
 	char m_Value[64] = { 0 };
+	char* getDate()
+	{
+		return &m_Valuetype[0];
+	}
 	int getdatelength()
 	{
-		return 128;
+		return sizeof(m_Valuetype) + sizeof(m_Value);
+	}
+	int I()
+	{
+		return atoi(m_Value);
+	}
+	int D()
+	{
+		return atof(m_Value);
+	}
+	string S()
+	{
+		return m_Value;
+	}
+	_HValue()
+	{
+		strcpy_s(m_Valuetype, "null");
+		strcpy_s(m_Value, "");
+	}
+	_HValue(int value)
+	{
+		strcpy_s(m_Valuetype, "int");
+		sprintf_s(m_Value, "%d", value);
+	}
+	_HValue(double value)
+	{
+		strcpy_s(m_Valuetype, "double");
+		sprintf_s(m_Value, "%f", value);
+	}
+	_HValue(const char* value)
+	{
+		strcpy_s(m_Valuetype, "string");
+		strcpy_s(m_Value, value);
+	}
+	_HValue(const _HValue& value)
+	{
+		strcpy_s(m_Valuetype, value.m_Valuetype);
+		strcpy_s(m_Value, value.m_Value);
+	}
+	_HValue operator=(const _HValue& value)
+	{
+		strcpy_s(m_Valuetype, value.m_Valuetype);
+		strcpy_s(m_Value, value.m_Value);
+		return *this;
+	}
+	_HValue operator=(const char* value)
+	{
+		strcpy_s(m_Valuetype, "string");
+		strcpy_s(m_Value, value);
+		return *this;
+	}
+	_HValue operator=(int value)
+	{
+		strcpy_s(m_Valuetype, "int");
+		sprintf_s(m_Value, "%d", value);
+		return *this;
+	}
+	_HValue operator=(double value)
+	{
+		strcpy_s(m_Valuetype, "double");
+		sprintf_s(m_Value, "%f", value);
+		return *this;
 	}
 }HValue;
 
 typedef struct _HValues
 {
 	vector<HValue> m_Values;
-	int nums;
+	char *getDate()
+	{
+		if(m_Values.size() == 0)
+			return NULL;
+		return (char*)m_Values[0].getDate();
+	}
 	int getdatelength()
 	{
-		int length = 0;
-		for (int i = 0; i < nums; i++)
+		int length = sizeof(HValue) * m_Values.size();
+		return length;
+	}
+	int getValueNums()
+	{
+		return m_Values.size();
+	}
+	_HValues()
+	{
+	}
+	~_HValues()
+	{
+		m_Values.clear();
+	}
+	_HValues(const int value)
+	{
+		HValue value1 = value;
+		m_Values.push_back(value1);
+	}
+	_HValues(const double value)
+	{
+		HValue value1;
+		value1 = value;
+		m_Values.push_back(value1);
+	}
+	_HValues(const char* value)
+	{
+		HValue value1;
+		value1 = value;
+		m_Values.push_back(value1);
+	}
+	_HValues(const vector<HValue>& values)
+	{
+		for (int i = 0; i < values.size(); i++)
 		{
-			length += m_Values[i].getdatelength();
+			m_Values.push_back(values[i]);
 		}
-		return length + sizeof(int);
+	}
+	_HValues operator=(const _HValues& values)
+	{
+		m_Values.clear();
+		for (int i = 0; i < values.m_Values.size(); i++)
+		{
+			m_Values.push_back(values.m_Values[i]);
+		}
+		return *this;
+	}
+	_HValues operator=(const int value)
+	{
+		m_Values.clear();
+		HValue value1;
+		value1= value;
+		m_Values.push_back(value1);
+		return *this;
+	}
+	_HValues operator=(const double value)
+	{
+		m_Values.clear();
+		HValue value1;
+		value1 = value;
+		m_Values.push_back(value1);
+		return *this;
+	}
+	_HValues operator=(const char* value)
+	{
+		m_Values.clear();
+		HValue value1;
+		value1 = value;
+		m_Values.push_back(value1);
+		return *this;
+	}
+	_HValues operator=(const vector<HValue>& values)
+	{
+		m_Values.clear();
+		for (int i = 0; i < values.size(); i++)
+		{
+			m_Values.push_back(values[i]);
+		}
+		return *this;
 	}
 }HValues;
 
 typedef struct _ImageHead
 {
-	int width;
-	int height;
-	int channels;
-	int getdatelength()
+	int width = 0;
+	int height = 0;
+	int channels = 0;
+	int length = 0;
+	void clear()
 	{
-		return width * height * channels;
+		width = 0;
+		height = 0;
+		channels = 0;
+		length = 0;
+	}
+	_ImageHead()
+	{
+		clear();
+	}
+	_ImageHead(const _ImageHead& image)
+	{
+		width = image.width;
+		height = image.height;
+		channels = image.channels;
+		length = image.length;
+	}
+	_ImageHead(int width, int height, int channels, int length)
+	{
+		this->width = width;
+		this->height = height;
+		this->channels = channels;
+		this->length = length;
 	}
 }ImageHeader;
-
 typedef struct _HImage
 {
 	ImageHeader  imageHead;
-	char* data;
+	unsigned char* data = NULL;
 	int getdatelength()
 	{
-		return imageHead.getdatelength() + sizeof(ImageHeader);
+		return imageHead.length + sizeof(ImageHeader);
+	}
+	void Rlease()
+	{
+		imageHead.clear();
+		if (data != NULL)
+		{
+			delete data;
+			data = NULL;
+		}
+	}
+	_HImage()
+	{
+		data = NULL;
+	}
+	_HImage(const _HImage& image)
+	{
+		imageHead = image.imageHead;
+		if (image.data != NULL)
+		{
+			data = new unsigned char[image.imageHead.length];
+			if (data != NULL)
+			{
+				memcpy(data, image.data, image.imageHead.length);
+			}
+		}
+	}
+	~_HImage()
+	{
+		if (data != NULL)
+		{
+			delete data;
+			data = NULL;
+		}
+		imageHead.clear();
+	}
+	_HImage(int width, int height, int channels, int length, unsigned char* inputdata)
+	{
+		imageHead.width = width;
+		imageHead.height = height;
+		imageHead.channels = channels;
+		imageHead.length = length;
+		data = new unsigned char[length];
+		if (data != NULL)
+		{
+			memcpy(data, inputdata, length);
+		}
+	}
+	_HImage(char* inputdata, int length)
+	{
+		memcpy(&imageHead, inputdata, sizeof(ImageHeader));
+		data = new unsigned char[imageHead.length];
+		if (data != NULL)
+		{
+			memcpy(data, inputdata + sizeof(ImageHeader), imageHead.length);
+		}
+	}
+	_HImage operator=(const _HImage& image)
+	{
+		imageHead = image.imageHead;
+		if (data != NULL)
+		{
+			delete[] data;
+			data = NULL;
+		}
+		if (image.data != NULL)
+		{
+			data = new unsigned char[image.imageHead.length];
+			if (data != NULL)
+			{
+				memcpy(data, image.data, image.imageHead.length);
+			}
+		}
+		return *this;
 	}
 }HImage;
 
 typedef struct _HImages
 {
 	vector<HImage> m_Images;
-	int nums;
+	void Relase()
+	{
+		for (int i = 0; i < m_Images.size(); i++)
+		{
+			m_Images[i].Rlease();
+		}
+		m_Images.clear();
+	}
+	_HImages()
+	{
+
+	}
+	~_HImages()
+	{
+		for (int i = 0; i < m_Images.size(); i++)
+		{
+			m_Images[i].Rlease();
+		}
+		m_Images.clear();
+	}
+	_HImages(const _HImages& images)
+	{
+		for (int i = 0; i < images.m_Images.size(); i++)
+		{
+			m_Images.push_back(images.m_Images[i]);
+		}
+	}
+	_HImages operator=(const _HImages& images)
+	{
+		m_Images.clear();
+		for (int i = 0; i < images.m_Images.size(); i++)
+		{
+			m_Images.push_back(images.m_Images[i]);
+		}
+		return *this;
+	}
 	int getdatelength()
 	{
 		int length = 0;
-		for (int i = 0; i < nums; i++)
+		for (int i = 0; i < m_Images.size(); i++)
 		{
 			length += m_Images[i].getdatelength();
 		}
-		return length + sizeof(int);
+		return length;
+	}
+	int getImageNums()
+	{
+		return m_Images.size();
 	}
 }HImages;
 
 
-//∞Û∂®∫Ø ˝√˚≥∆∫Õ∂‘”¶µƒªÿµ˜∫Ø ˝
-//∫Ø ˝µƒ±Í◊º∏Ò Ω functioName(inputImages,inputPrams,outputImages,outputPrams,errcode,errmsg);
-//errcode±Ì æ∫Ø ˝÷¥–– «∑Ò≥…π¶£¨0±Ì æ≥…π¶£¨∆‰À˚±Ì æ ß∞‹£¨errmsg±Ì æ¥ÌŒÛ–≈œ¢
+//ÁªëÂÆöÂáΩÊï∞ÂêçÁß∞ÂíåÂØπÂ∫îÁöÑÂõûË∞ÉÂáΩÊï∞
+//ÂáΩÊï∞ÁöÑÊ†áÂáÜÊ†ºÂºè functioName(inputImages,inputPrams,outputImages,outputPrams,errcode,errmsg);
+//errcodeË°®Á§∫ÂáΩÊï∞ÊâßË°åÊòØÂê¶ÊàêÂäüÔºå0Ë°®Á§∫ÊàêÂäüÔºåÂÖ∂‰ªñË°®Á§∫Â§±Ë¥•ÔºåerrmsgË°®Á§∫ÈîôËØØ‰ø°ÊÅØ
 typedef void (*FunctionTableStream)(HImages inputImages, HValues inputPrams, HImages& outputImages, HValues& outputPrams, int& errcode, string& errmsg);
-
-
 typedef struct _Callbackfunc
 {
-	string funcname; //∫Ø ˝√˚≥∆
-	int inputImagesnums; // ‰»ÎÕºœÒ∏ˆ ˝
-	int inputPramsnums; // ‰»Î≤Œ ˝∏ˆ ˝
-	int outputImagesnums; // ‰≥ˆÕºœÒ∏ˆ ˝
-	int outputPramsnums; // ‰≥ˆ≤Œ ˝∏ˆ ˝
-	FunctionTableStream func; //∫Ø ˝÷∏’Î
+	string funcname; //ÂáΩÊï∞ÂêçÁß∞
+	int inputImagesnums; //ËæìÂÖ•ÂõæÂÉè‰∏™Êï∞
+	int inputPramsnums; //ËæìÂÖ•ÂèÇÊï∞‰∏™Êï∞
+	int outputImagesnums; //ËæìÂá∫ÂõæÂÉè‰∏™Êï∞
+	int outputPramsnums; //ËæìÂá∫ÂèÇÊï∞‰∏™Êï∞
+	FunctionTableStream func; //ÂáΩÊï∞ÊåáÈíà
 }Callbackfunc;
-
-
-//”ÎøÕªß∂ÀÕ®–≈∂Àø⁄
+//Â≠òÂÇ®IPÂú∞ÂùÄÂíåÁ´ØÂè£Âè∑
+typedef struct _IPPort
+{
+	std::string IP;
+	int Port;
+	_IPPort()
+	{
+		IP = "";
+		Port = 0;
+	}
+	_IPPort(const std::string& ip, int port)
+	{
+		IP = ip;
+		Port = port;
+	}
+	void init()
+	{
+		IP = "";
+		Port = 0;
+	}
+	_IPPort operator=(const _IPPort& ip_port)
+	{
+		IP = ip_port.IP;
+		Port = ip_port.Port;
+		return *this;
+	}
+}IPPort;
+//‰∏éÂÆ¢Êà∑Á´ØÈÄö‰ø°Á´ØÂè£
 typedef struct _CommPorts
 {
-	int isActAsServer; // «∑Ò◊˜Œ™∑˛ŒÒ∂À£¨0±Ì æøÕªß∂À£¨1±Ì æ∑˛ŒÒ∂À
-	std::string PortName;//∂Àø⁄√˚≥∆
-	std::string localhost_IP;//±æª˙IPµÿ÷∑
-	std::string remote_IP;//‘∂≥ÃIPµÿ÷∑
-	int nLocalPort;//±æµÿº‡Ã˝∂Àø⁄∫≈
-	int nRemotePort;//‘∂≥Ã¡¨Ω”∂Àø⁄∫≈
-	vector<Callbackfunc> m_Callbackfuncs; //ªÿµ˜∫Ø ˝¡–±Ì
+	int isActAsServer; //ÊòØÂê¶‰Ωú‰∏∫ÊúçÂä°Á´ØÔºå0Ë°®Á§∫ÂÆ¢Êà∑Á´ØÔºå1Ë°®Á§∫ÊúçÂä°Á´Ø
+	std::string PortName;//Ê≥®ÂÜåÁ´ØÂè£ÂêçÁß∞
+	IPPort localhost_IP;//Êú¨Êú∫IPÂú∞ÂùÄ
+	void init()
+	{
+		isActAsServer = -1;
+		PortName = "";
+		localhost_IP.init();
+	}
+	_CommPorts()
+	{
+		init();
+	}
+	_CommPorts(int isServer, const std::string& portName, const IPPort& localhost_ip)
+	{
+		isActAsServer = isServer;
+		PortName = portName;
+		localhost_IP = localhost_ip;
+	}
+	_CommPorts(const std::string ip, const int port)
+	{
+		isActAsServer = 0;
+		PortName = "";
+		localhost_IP.init();
+		localhost_IP.IP = ip;
+		localhost_IP.Port = port;
+	}
 }CommPorts;
 
 
@@ -114,7 +433,7 @@ typedef struct _ResultData
 }ResultData;
 const int TIME_OUT_COUNT = 20;
 /*
-*	”ÎøÕªß∂ÀÕ®–≈
+*	‰∏éÂÆ¢Êà∑Á´ØÈÄö‰ø°
 */
 
 #define	OPERATE_CODE_CARELESS	((BYTE)0x00) 
@@ -123,17 +442,17 @@ const int TIME_OUT_COUNT = 20;
 #define HEAD_LABEL_SC_2 0x55
 
 //////////////////////////////////////////////////////////////////////////
-//œ‡ª˙≤Ÿ◊˜
-#define CAMERA_OPERATE_TYPE				OperateTypes(0x01,OPERATE_CODE_CARELESS) //±Ì æœ‡ª˙≤Ÿ◊˜
-#define CAMERA_COMMAND_SeT					OperateTypes(0x01,0x01) //œ‡ª˙commandÕ®–≈-∑¢ÀÕ
-#define CAMERA_REQUEST_Get					OperateTypes(0x01,0x02) //œ‡ª˙requestÕ®–≈-∑¢ÀÕ
+//Áõ∏Êú∫Êìç‰Ωú
+#define CAMERA_OPERATE_TYPE				OperateTypes(0x01,OPERATE_CODE_CARELESS) //Ë°®Á§∫Áõ∏Êú∫Êìç‰Ωú
+#define CAMERA_COMMAND_SeT					OperateTypes(0x01,0x01) //Áõ∏Êú∫commandÈÄö‰ø°-ÂèëÈÄÅ
+#define CAMERA_REQUEST_Get					OperateTypes(0x01,0x02) //Áõ∏Êú∫requestÈÄö‰ø°-ÂèëÈÄÅ
 
-#define CAMERA_COMMAND_Set_R				OperateTypes(0x01,0x11) //œ‡ª˙commandÕ®–≈-Ω” ’
-#define CAMERA_REQUEST_Get_R				OperateTypes(0x01,0x12) //œ‡ª˙requestÕ®–≈-Ω” ’0x0
+#define CAMERA_COMMAND_Set_R				OperateTypes(0x01,0x11) //Áõ∏Êú∫commandÈÄö‰ø°-Êé•Êî∂
+#define CAMERA_REQUEST_Get_R				OperateTypes(0x01,0x12) //Áõ∏Êú∫requestÈÄö‰ø°-Êé•Êî∂0x0
 
 //////////////////////////////////////////////////////////////////////////
-//IOø®≤Ÿ◊˜
-#define IO_OPERATE_TYPE				OperateTypes(0x20,OPERATE_CODE_CARELESS) //±Ì æ–≈∫≈Ω”ø⁄∆ΩÃ®≤Ÿ◊˜
+//IOÂç°Êìç‰Ωú
+#define IO_OPERATE_TYPE				OperateTypes(0x20,OPERATE_CODE_CARELESS) //Ë°®Á§∫‰ø°Âè∑Êé•Âè£Âπ≥Âè∞Êìç‰Ωú
 #define IO_COMMAND_GPIO_Set				OperateTypes(0x20,0x01) //set
 #define IO_COMMAND_GPIO_Get				OperateTypes(0x20,0x02) //get 
 #define IO_COMMAND_LIGHT_Set				OperateTypes(0x20,0x03) //set 
@@ -152,47 +471,47 @@ const int TIME_OUT_COUNT = 20;
 #define IO_COMMAND_PCIE_Set_R				OperateTypes(0x20,0x17) //set 
 #define IO_COMMAND_PCIE_Get_R				OperateTypes(0x20,0x18) //get 
 
-//PLC≤Ÿ◊˜
-#define PLC_OPERATE_TYPE				OperateTypes(0x30,OPERATE_CODE_CARELESS) //±Ì æPLC≤Ÿ◊˜
-#define PLC_COMMAND_Set					OperateTypes(0x30,0x01) //PLC√¸¡ÓÕ®–≈-∑¢ÀÕ
-#define PLC_COMMAND_Get					OperateTypes(0x30,0x01) //PLC√¸¡ÓÕ®–≈-∑¢ÀÕ
+//PLCÊìç‰Ωú
+#define PLC_OPERATE_TYPE				OperateTypes(0x30,OPERATE_CODE_CARELESS) //Ë°®Á§∫PLCÊìç‰Ωú
+#define PLC_COMMAND_Set					OperateTypes(0x30,0x01) //PLCÂëΩ‰ª§ÈÄö‰ø°-ÂèëÈÄÅ
+#define PLC_COMMAND_Get					OperateTypes(0x30,0x01) //PLCÂëΩ‰ª§ÈÄö‰ø°-ÂèëÈÄÅ
 
-#define PLC_COMMAND_Set_R				OperateTypes(0x30,0x11) //PLC√¸¡ÓÕ®–≈-Ω” ’
-#define PLC_COMMAND_Get_R				OperateTypes(0x30,0x11) //PLC√¸¡ÓÕ®–≈-Ω” ’
+#define PLC_COMMAND_Set_R				OperateTypes(0x30,0x11) //PLCÂëΩ‰ª§ÈÄö‰ø°-Êé•Êî∂
+#define PLC_COMMAND_Get_R				OperateTypes(0x30,0x11) //PLCÂëΩ‰ª§ÈÄö‰ø°-Êé•Êî∂
 
-//œµÕ≥≤Œ ˝≤Ÿ◊˜
-#define SYS_PARAM_OPERATE_TYPE			OperateTypes(0x40,OPERATE_CODE_CARELESS) //±Ì æœµÕ≥≤Œ ˝≤Ÿ◊˜
-#define SYS_PARAM_SET_PARAM				OperateTypes(0x40,0x01) //…Ë÷√œµÕ≥≤Œ ˝
-#define SYS_PARAM_GET_PARAM				OperateTypes(0x40,0x02) //ªÒ»°œµÕ≥≤Œ ˝	
-#define SYS_PARAM_SET_PARAM_R			OperateTypes(0x40,0x11) //…Ë÷√œµÕ≥≤Œ ˝Ω·π˚
-#define SYS_PARAM_GET_PARAM_R			OperateTypes(0x40,0x12) //ªÒ»°œµÕ≥≤Œ ˝Ω·π˚
+//Á≥ªÁªüÂèÇÊï∞Êìç‰Ωú
+#define SYS_PARAM_OPERATE_TYPE			OperateTypes(0x40,OPERATE_CODE_CARELESS) //Ë°®Á§∫Á≥ªÁªüÂèÇÊï∞Êìç‰Ωú
+#define SYS_PARAM_SET_PARAM				OperateTypes(0x40,0x01) //ËÆæÁΩÆÁ≥ªÁªüÂèÇÊï∞
+#define SYS_PARAM_GET_PARAM				OperateTypes(0x40,0x02) //Ëé∑ÂèñÁ≥ªÁªüÂèÇÊï∞	
+#define SYS_PARAM_SET_PARAM_R			OperateTypes(0x40,0x11) //ËÆæÁΩÆÁ≥ªÁªüÂèÇÊï∞ÁªìÊûú
+#define SYS_PARAM_GET_PARAM_R			OperateTypes(0x40,0x12) //Ëé∑ÂèñÁ≥ªÁªüÂèÇÊï∞ÁªìÊûú
 
-//À„∑®≤Œ ˝≤Ÿ◊˜
-#define ALG_PARAM_OPERATE_TYPE			OperateTypes(0x50,OPERATE_CODE_CARELESS) //±Ì æÀ„∑®≤Œ ˝≤Ÿ◊˜
-#define ALG_PARAM_SET_PARAM				OperateTypes(0x50,0x01) //…Ë÷√À„∑®≤Œ ˝
-#define ALG_PARAM_GET_PARAM				OperateTypes(0x50,0x02) //ªÒ»°À„∑®≤Œ ˝
-#define ALG_PARAM_SET_PARAM_R			OperateTypes(0x50,0x11) //…Ë÷√À„∑®≤Œ ˝Ω·π˚
-#define ALG_PARAM_GET_PARAM_R			OperateTypes(0x50,0x12) //ªÒ»°À„∑®≤Œ ˝Ω·π˚
+//ÁÆóÊ≥ïÂèÇÊï∞Êìç‰Ωú
+#define ALG_PARAM_OPERATE_TYPE			OperateTypes(0x50,OPERATE_CODE_CARELESS) //Ë°®Á§∫ÁÆóÊ≥ïÂèÇÊï∞Êìç‰Ωú
+#define ALG_PARAM_SET_PARAM				OperateTypes(0x50,0x01) //ËÆæÁΩÆÁÆóÊ≥ïÂèÇÊï∞
+#define ALG_PARAM_GET_PARAM				OperateTypes(0x50,0x02) //Ëé∑ÂèñÁÆóÊ≥ïÂèÇÊï∞
+#define ALG_PARAM_SET_PARAM_R			OperateTypes(0x50,0x11) //ËÆæÁΩÆÁÆóÊ≥ïÂèÇÊï∞ÁªìÊûú
+#define ALG_PARAM_GET_PARAM_R			OperateTypes(0x50,0x12) //Ëé∑ÂèñÁÆóÊ≥ïÂèÇÊï∞ÁªìÊûú
 
-// ˝æ›ø‚≤Œ ˝≤Ÿ◊˜
-#define DB_PARAM_OPERATE_TYPE			OperateTypes(0x60,OPERATE_CODE_CARELESS) //±Ì æ ˝æ›ø‚≤Œ ˝≤Ÿ◊˜
-#define DB_PARAM_SET_PARAM				OperateTypes(0x60,0x01) //…Ë÷√ ˝æ›ø‚≤Œ ˝
-#define DB_PARAM_GET_PARAM				OperateTypes(0x60,0x02) //ªÒ»° ˝æ›ø‚≤Œ ˝
-#define DB_PARAM_SET_PARAM_R			OperateTypes(0x60,0x11) //…Ë÷√ ˝æ›ø‚≤Œ ˝Ω·π˚
-#define DB_PARAM_GET_PARAM_R			OperateTypes(0x60,0x12) //ªÒ»° ˝æ›ø‚≤Œ ˝Ω·π˚
+//Êï∞ÊçÆÂ∫ìÂèÇÊï∞Êìç‰Ωú
+#define DB_PARAM_OPERATE_TYPE			OperateTypes(0x60,OPERATE_CODE_CARELESS) //Ë°®Á§∫Êï∞ÊçÆÂ∫ìÂèÇÊï∞Êìç‰Ωú
+#define DB_PARAM_SET_PARAM				OperateTypes(0x60,0x01) //ËÆæÁΩÆÊï∞ÊçÆÂ∫ìÂèÇÊï∞
+#define DB_PARAM_GET_PARAM				OperateTypes(0x60,0x02) //Ëé∑ÂèñÊï∞ÊçÆÂ∫ìÂèÇÊï∞
+#define DB_PARAM_SET_PARAM_R			OperateTypes(0x60,0x11) //ËÆæÁΩÆÊï∞ÊçÆÂ∫ìÂèÇÊï∞ÁªìÊûú
+#define DB_PARAM_GET_PARAM_R			OperateTypes(0x60,0x12) //Ëé∑ÂèñÊï∞ÊçÆÂ∫ìÂèÇÊï∞ÁªìÊûú
 //////////////////////////////////////////////////////////////////////////
-//Ω·π˚ ˝æ›∑¢ÀÕ
-#define RES_DATA_OPERATE_TYPE			OperateTypes(0x80,OPERATE_CODE_CARELESS) //±Ì æΩ·π˚ ˝æ›≤Ÿ◊˜
-#define RES_DATA_SEND_DATA				OperateTypes(0x80,0x01) //∑¢ÀÕΩ·π˚ ˝æ›
+//ÁªìÊûúÊï∞ÊçÆÂèëÈÄÅ
+#define RES_DATA_OPERATE_TYPE			OperateTypes(0x80,OPERATE_CODE_CARELESS) //Ë°®Á§∫ÁªìÊûúÊï∞ÊçÆÊìç‰Ωú
+#define RES_DATA_SEND_DATA				OperateTypes(0x80,0x01) //ÂèëÈÄÅÁªìÊûúÊï∞ÊçÆ
 
-//±®æØ–≈œ¢Ω” ’
-#define ALARM_MSG_OPERATE_TYPE			OperateTypes(0x90,OPERATE_CODE_CARELESS) //±Ì æ±®æØ–≈œ¢≤Ÿ◊˜
-#define ALARM_MSG_RECEIVE_MSG			OperateTypes(0x90,0x01) //Ω” ’±®æØ–≈œ¢
-#define ALARM_MSG_RECEIVE_MSG			OperateTypes(0x90, 0x02) //Ω” ’±®æØ–≈œ¢
-#define ALARM_MSG_RECEIVE_MSG			OperateTypes(0x90, 0x03) //Ω” ’±®æØ–≈œ¢
-#define ALARM_MSG_RECEIVE_MSG			OperateTypes(0x90, 0x04) //Ω” ’±®æØ–≈œ¢
-#define ALARM_MSG_RECEIVE_MSG			OperateTypes(0x90, 0x05) //Ω” ’±®æØ–≈œ¢
-#define ALARM_MSG_RECEIVE_MSG			OperateTypes(0x90, 0x06) //Ω” ’±®æØ–≈œ¢
+//Êä•Ë≠¶‰ø°ÊÅØÊé•Êî∂
+#define ALARM_MSG_OPERATE_TYPE			OperateTypes(0x90,OPERATE_CODE_CARELESS) //Ë°®Á§∫Êä•Ë≠¶‰ø°ÊÅØÊìç‰Ωú
+#define ALARM_MSG_RECEIVE_MSG			OperateTypes(0x90,0x01) //Êé•Êî∂Êä•Ë≠¶‰ø°ÊÅØ
+#define ALARM_MSG_RECEIVE_MSG			OperateTypes(0x90, 0x02) //Êé•Êî∂Êä•Ë≠¶‰ø°ÊÅØ
+#define ALARM_MSG_RECEIVE_MSG			OperateTypes(0x90, 0x03) //Êé•Êî∂Êä•Ë≠¶‰ø°ÊÅØ
+#define ALARM_MSG_RECEIVE_MSG			OperateTypes(0x90, 0x04) //Êé•Êî∂Êä•Ë≠¶‰ø°ÊÅØ
+#define ALARM_MSG_RECEIVE_MSG			OperateTypes(0x90, 0x05) //Êé•Êî∂Êä•Ë≠¶‰ø°ÊÅØ
+#define ALARM_MSG_RECEIVE_MSG			OperateTypes(0x90, 0x06) //Êé•Êî∂Êä•Ë≠¶‰ø°ÊÅØ
 //////////////////////////////////////////////////////////////////////////
 
 typedef struct OperateTypes
@@ -225,20 +544,260 @@ typedef struct OperateTypes
 	}
 }OperateTypes;
 
+typedef union _UserDefine
+{
+	char user_dummy[64];
+	_UserDefine()
+	{
+		memset(user_dummy, 0, 64);
+	}
+	_UserDefine& operator = (const string& input)
+	{
+		memcpy(user_dummy, input.c_str(), input.length());
+		return *this;
+	}
+	string toStr()
+	{
+		return string(user_dummy);
+	}
+}UserDefine;
+
 typedef struct _sc_pack_head
 {
 	unsigned char label_1;
 	unsigned char label_2;
 
 	OperateTypes operate_type;
-	typedef union _UserDefine
-	{
-		char user_dummy[64];
-		string func_name;
-	}UserDefine;
-	
 	UserDefine user_define;
 	unsigned char inputParamsnums;
 	unsigned char inputImagesnums;
-	unsigned long data_len;
+	unsigned long data_len;//Êï∞ÊçÆÈïøÂ∫¶
+
+	char *GetData()
+	{
+		return (char*)&label_1;
+	}
+	void init()
+	{
+		label_1 = HEAD_LABEL_SC_1;
+		label_2 = HEAD_LABEL_SC_2;
+		operate_type.operate_code_1 = OPERATE_CODE_CARELESS;
+		operate_type.operate_code_2 = OPERATE_CODE_CARELESS;
+		inputParamsnums = 0;
+		inputImagesnums = 0;
+		data_len = 0;
+	}
+	_sc_pack_head()
+	{
+		label_1 = HEAD_LABEL_SC_1;
+		label_2 = HEAD_LABEL_SC_2;
+		operate_type.operate_code_1 = OPERATE_CODE_CARELESS;
+		operate_type.operate_code_2 = OPERATE_CODE_CARELESS;
+		inputParamsnums = 0;
+		inputImagesnums = 0;
+		data_len = 0;
+	}
+	_sc_pack_head(OperateTypes inputOper, string inputDef, int inputParams, int inputImages)
+	{
+		label_1 = HEAD_LABEL_SC_1;
+		label_2 = HEAD_LABEL_SC_2;
+		operate_type = inputOper;
+		user_define = inputDef;
+		inputParamsnums = inputParams;
+		inputImagesnums = inputImages;
+		data_len = 0;
+	}
+	_sc_pack_head& operator = (const _sc_pack_head& input)
+	{
+		if (this != &input)
+		{
+		label_1 = input.label_1;
+		label_2 = input.label_2;
+		operate_type = input.operate_type;
+		user_define = input.user_define;
+		inputParamsnums = input.inputParamsnums;
+		inputImagesnums = input.inputImagesnums;
+		data_len = input.data_len;
+		}
+		return *this;
+	}
 }SC_PackHead;
+
+typedef struct _sc_pack_data
+{
+	int data_len = 0;
+	char* buffer = NULL;
+	void init()
+	{
+		data_len = 0;
+		buffer = NULL;
+	}
+	_sc_pack_data()
+	{
+		int data_len = 0;
+		buffer = NULL;
+	}
+	_sc_pack_data(const _sc_pack_data& aPacket, int aPacketLength)
+	{
+		buffer = new char[aPacketLength];
+		memcpy(buffer, aPacket.buffer, aPacketLength);
+	}
+	_sc_pack_data(char* inputbuffer, int inputbufferLength)
+	{
+		buffer = new char[inputbufferLength];
+		data_len = inputbufferLength;
+		memcpy(buffer, inputbuffer, inputbufferLength);
+	}
+	_sc_pack_data(HValues inputValues, HImages inputImages)
+	{
+		buffer = new char[inputValues.getdatelength() + inputImages.getdatelength()];
+		memcpy(buffer, inputValues.m_Values[0].m_Value, inputValues.getdatelength());
+		memcpy(buffer + inputValues.getdatelength(), inputImages.m_Images[0].data, inputImages.getdatelength());
+	}
+	~_sc_pack_data()
+	{
+		if (buffer)
+		{
+			delete[] buffer;
+			buffer = NULL;
+		}
+	}
+	_sc_pack_data& operator = (const _sc_pack_data& input)
+	{
+		if (this != &input)
+		{
+			if (buffer)
+			{
+				delete[] buffer;
+				buffer = NULL;
+			}
+			buffer = new char[input.data_len];
+			memcpy(buffer, input.buffer, input.data_len);
+		}
+		return *this;
+	}
+}SC_PackData;
+
+typedef struct _SC_PacketData
+{
+	SC_PackHead head;
+	//ÂÖàÊîæÂèòÈáèÔºåÂÜçÊîæÂõæÁâá
+	SC_PackData data;
+
+	_SC_PacketData()
+	{
+		head.init();
+		data.init();
+	}
+	_SC_PacketData(SC_PackHead inputHead, SC_PackData inputData)
+	{
+		head = inputHead;
+		data = inputData;
+	}
+
+	_SC_PacketData(const _SC_PacketData& aPacket)
+	{
+		this->head = aPacket.head;
+		this->data.buffer = new char[aPacket.data.data_len];
+		this->data.data_len = aPacket.data.data_len;
+		memcpy(this->data.buffer, aPacket.data.buffer, aPacket.head.data_len);
+	}
+	_SC_PacketData operator = (const _SC_PacketData& aPacket)
+	{
+		this->head = aPacket.head;
+		this->data.buffer = new char[aPacket.data.data_len];
+		this->data.data_len = aPacket.data.data_len;
+		memcpy(this->data.buffer, aPacket.data.buffer, aPacket.head.data_len);
+		return *this;
+	}
+	_SC_PacketData(string funcName,HImages inputImages, HValues inputPrams)
+	{
+		head.user_define = funcName;
+		head.inputImagesnums = inputImages.getImageNums();
+		head.inputParamsnums = inputPrams.getValueNums();
+		int Imagesdatasize = inputImages.getdatelength();
+		int Paramsdatasize = inputPrams.getdatelength();
+		head.data_len = Imagesdatasize + Paramsdatasize;
+		data.buffer = new char[head.data_len];
+		data.data_len = head.data_len;
+		//ÂÖàÊîæÂèòÈáèÔºåÂÜçÊîæÂõæÁâá
+		int offsetPrt = 0;
+		for (int i = 0; i < inputPrams.getValueNums(); ++i)
+		{
+			memcpy(data.buffer + offsetPrt, inputPrams.m_Values[i].getDate(), sizeof(HValue));
+			offsetPrt += sizeof(HValue);
+		}
+		for (int i = 0; i < inputImages.getImageNums(); ++i)
+		{
+			memcpy(data.buffer + offsetPrt, &inputImages.m_Images[i].imageHead, sizeof(ImageHeader));
+			offsetPrt += sizeof(ImageHeader);
+			memcpy(data.buffer + offsetPrt, inputImages.m_Images[i].data, inputImages.m_Images[i].imageHead.length);
+			offsetPrt += inputImages.m_Images[i].imageHead.length;
+		}
+	}
+	_SC_PacketData(char * inputbuffer)
+	{
+		memcpy(&head, inputbuffer, sizeof(SC_PackHead));
+		data.buffer = new char[head.data_len];
+		data.data_len = head.data_len;
+		memcpy(data.buffer, inputbuffer + sizeof(SC_PackHead), head.data_len);
+	}
+	int getdatelength()
+	{
+		return sizeof(SC_PackHead) + head.data_len;
+	}
+	~_SC_PacketData()
+	{
+		if (data.buffer)
+		{
+			delete[] data.buffer;
+			data.buffer = NULL;
+		}
+	}
+	void * getHeaddata()
+	{
+		return &head;
+	}
+	void *GetDatadata()
+	{
+		return data.buffer;
+	}
+	void Clear()
+	{
+		head.init();
+		data.init();
+	}
+}SC_PacketData;
+
+typedef struct _SC_PacketDataEx
+{
+	//ÁΩëÁªúÊï∞ÊçÆ
+	LONG DataSorceSocket = -1;//Êï∞ÊçÆÊù•Ê∫êsocket
+	//ÈÄöËÆØÁ´ØÂè£
+	//ÂåÖ‰ø°ÊÅØ
+	SC_PacketData data;
+	_SC_PacketDataEx()
+	{
+		data.Clear();
+	}
+	~_SC_PacketDataEx()
+	{
+		data.Clear();
+	}
+	_SC_PacketDataEx(const _SC_PacketDataEx & aPacket)
+	{
+		this->DataSorceSocket = aPacket.DataSorceSocket;
+		this->data = aPacket.data;
+	}
+	_SC_PacketDataEx(LONG inputComm, SC_PacketData inputData)
+	{
+		data = inputData;
+	}
+	_SC_PacketDataEx operator = (const _SC_PacketDataEx& aPacket)
+	{
+		this->DataSorceSocket = aPacket.DataSorceSocket;
+		this->data = aPacket.data;
+		return *this;
+	}
+
+}SC_PacketDataEx;

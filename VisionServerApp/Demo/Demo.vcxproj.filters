@@ -16,10 +16,33 @@
     <Filter Include="ADOdemo">
       <UniqueIdentifier>{da704537-8557-4b63-9f8c-35c67a28869f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Client_demo">
+      <UniqueIdentifier>{71fe3b83-067e-4f6b-b12a-0ef2dc09faa4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Cameral_demo">
+      <UniqueIdentifier>{4a5ac964-3630-4a19-85e7-18d6bc6e475d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="controll_demo.cpp">
+      <Filter>Client_demo</Filter>
+    </ClCompile>
     <ClCompile Include="..\MZ_ADOConnect\ado_demo.cpp">
       <Filter>ADOdemo</Filter>
     </ClCompile>
+    <ClCompile Include="cameral_demo.cpp">
+      <Filter>Cameral_demo</Filter>
+    </ClCompile>
+    <ClCompile Include="源.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cameral_demo.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="controll_demo.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -71,7 +71,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)MZ_Device\lib;E:\My  Download\machine learning\opencv\build\x64\vc16\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>E:\My  Download\machine learning\opencv\build\include;E:\My  Download\machine learning\opencv\build\include\opencv2;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -107,11 +108,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>E:\My  Download\machine learning\opencv\build\include;E:\My  Download\machine learning\opencv\build\include\opencv2</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>MZ_ADOConnect.lib;oleaut32.lib;comsuppw.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>MZ_ADOConnect.lib;MZ_CameraDevice.lib;oleaut32.lib;comsuppw.lib;%(AdditionalDependencies);MZ_ClientControl.lib;opencv_world490d.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -132,6 +135,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\MZ_ADOConnect\ado_demo.cpp" />
+    <ClCompile Include="controll_demo.cpp" />
+    <ClCompile Include="cameral_demo.cpp" />
+    <ClCompile Include="源.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cameral_demo.h" />
+    <ClInclude Include="controll_demo.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

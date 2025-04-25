@@ -1,142 +1,118 @@
 #include "pch.h"
-#include <atlstr.h>
 #include "TcpClient.h"
+#include <cstring>
+#include <iostream>
 
-CTcpClient::CTcpClient()
+CAsyncTCPClient::CAsyncTCPClient(const std::string& host, int port)
+    : m_socket(INVALID_SOCKET), m_host(host), m_port(port), m_connected(false) 
 {
-	m_sockfd = -1;
-	memset(m_ip, 0, sizeof(m_ip));
-	m_port = 0;
-	m_btimeout = false;
-
-	WSADATA wsaData;
-	WORD version = MAKEWORD(2, 2);
-	int wsResult = WSAStartup(version, &wsaData);
+    // 初始化 Winsock
+    WSADATA wsaData;
+    WSAStartup(MAKEWORD(2, 2), &wsaData);
 
 }
-CTcpClient::~CTcpClient()
-{
-	Close();
-	WSACleanup();
+
+void CAsyncTCPClient::Connect() {
+    if (!m_connected) 
+    {
+        // 创建客户端套接字
+        m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        if (m_socket == INVALID_SOCKET) {
+            throw SocketException(WSAGetLastError(), "Failed to create client socket");
+        }
+
+        // 设置服务器地址信息
+        SOCKADDR_IN sin;
+        memset(&sin, 0, sizeof(sin));
+        sin.sin_family = AF_INET;
+        sin.sin_addr.s_addr = inet_addr(m_host.c_str());
+        sin.sin_port = htons(m_port);
+        std::cout << "connect start" << std::endl;
+        // 连接服务器
+        if (connect(m_socket, (SOCKADDR*)&sin, sizeof(SOCKADDR_IN)) == SOCKET_ERROR) {
+            throw SocketException(WSAGetLastError(), "Failed to connect to server");
+        }
+
+        m_connected = true;
+
+        // 启动数据处理线程
+        std::thread processDataThread(&CAsyncTCPClient::ProcessData, this);
+        processDataThread.detach();
+        m_onConnectCallback(m_socket,m_connected);
+    }
 }
 
-bool CTcpClient::ConnectToServer(const char *ip, const int port) 
+void CAsyncTCPClient::Disconnect() {
+    std::cout << "CAsyncTCPClient::Disconnect: Start, m_connected=" << m_connected << std::endl;
+    std::cout << "m_onConnectCallback empty: " << !m_onConnectCallback << std::endl;
+    if (m_connected)
+    {
+        try {
+            if (m_onConnectCallback) {
+                m_onConnectCallback(m_socket, m_connected); // 行 50
+            }
+            else {
+                std::cerr << "CAsyncTCPClient::Disconnect: m_onConnectCallback empty!" << std::endl;
+            }
+        }
+        catch (const std::bad_function_call& e) {
+            std::cerr << "CAsyncTCPClient::Disconnect: " << e.what() << std::endl;
+        }
+        m_connected = false;
+        closesocket(m_socket);
+        m_socket = INVALID_SOCKET; // 标记无效 add by tjq
+        WSACleanup();// add by tjq
+
+    }
+    std::cout << "CAsyncTCPClient::Disconnect: End" << std::endl;
+}
+bool CAsyncTCPClient::IsConnected()
 {
-	if (m_sockfd != -1) {
-		close_T(m_sockfd);
-		m_sockfd = -1;
-	}
-
-	strcpy_s(m_ip, ip);
-	m_port = port;
-
-	//struct hostent* h;
-	struct sockaddr_in servaddr;
-
-	if ((m_sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
-		return false;
-
-	/*
-	if (!(h = gethostbyname(m_ip)))
-	{
-		close(m_sockfd);
-		m_sockfd = -1;
-		return false;
-	}
-	*/
-	addrinfoW hints, *result = NULL, *ptr = NULL;
-	ZeroMemory(&hints, sizeof(hints));
-	hints.ai_family = AF_INET; // 指定IPv4或IPv6
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-
-	// 将主机名转换为IP地址
-	int iResult = GetAddrInfo(CA2W(m_ip), NULL, &hints, &result);
-	if (iResult != 0) 
-		return false;
-
-
-	memset(&servaddr, 0, sizeof(servaddr));
-	servaddr.sin_family = AF_INET;
-	servaddr.sin_port = htons(m_port);  // 指定服务端的通讯端口
-	memcpy(&servaddr.sin_addr, result->ai_addr, result->ai_addrlen);
-
-	if (connect(m_sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) != 0)
-	{
-		close_T(m_sockfd);
-		m_sockfd = -1;
-		return false;
-	}
-
-	return true;
+    return m_connected;
 }
 
-bool CTcpClient::Recv(char *buffer, int bufferLength, const int itimeout)
+bool CAsyncTCPClient::Send(const char* buffer, int length) 
 {
-	if (m_sockfd == -1) return false;
+    std::lock_guard<std::mutex> lock(m_socketMutex);
 
-	if (itimeout>0) {
-		fd_set tmpfd;
-
-		FD_ZERO(&tmpfd);
-		FD_SET(m_sockfd, &tmpfd);
-
-		struct timeval timeout;
-		timeout.tv_sec = itimeout;
-		timeout.tv_usec = 0;
-
-		m_btimeout = false;
-
-		int i;
-		if ((i = select(m_sockfd + 1, &tmpfd, 0, 0, &timeout)) <= 0) {
-			if (i == 0) m_btimeout = true;
-			return false;
-		}
-	}
-
-	m_buflen = 0;
-	return (TcpRecv_T(m_sockfd, buffer, bufferLength ,&m_buflen));
+    if (send(m_socket, buffer, length, 0) == SOCKET_ERROR) 
+    {
+        return false;
+    }
+    return true;
 }
 
-bool CTcpClient::Send(const char *buffer, const int ibuflen, const int itimeout) 
+void CAsyncTCPClient::SetOnReceiveCallback(const OnReceiveCallback& callback)
 {
-	if (m_sockfd == -1) return false;
-
-	if (itimeout>0) {
-		fd_set tmpfd;
-
-		FD_ZERO(&tmpfd);
-		FD_SET(m_sockfd, &tmpfd);
-
-		struct timeval timeout;
-		timeout.tv_sec = itimeout;
-		timeout.tv_usec = 0;
-
-		m_btimeout = false;
-
-		int i;
-		if ((i = select(m_sockfd + 1, &tmpfd, 0, 0, &timeout)) <= 0) {
-			if (i == 0) m_btimeout = true;
-			return false;
-		}
-	}
-
-	int ilen = ibuflen;
-
-	if (ibuflen == 0) ilen = strlen(buffer);
-
-	return(TcpSend_T(m_sockfd, buffer, ilen));
+    m_onReceiveCallback = callback;
 }
 
-void CTcpClient::Close() 
+void CAsyncTCPClient::SetOnConnectCallback(const OnConnectCallback& callback)
 {
-	if (m_sockfd > 0) 
-		close_T(m_sockfd);
-
-	m_sockfd = -1;
-	memset(m_ip, 0, sizeof(m_ip));
-	m_port = 0;
-	m_btimeout = false;
+    m_onConnectCallback = callback;
 }
 
-
+void CAsyncTCPClient::ProcessData() {
+    char buffer[1024];
+    std::cout << "CAsyncTCPClient::ProcessData: Start" << std::endl;
+    while (m_connected) {
+        if (m_socket == INVALID_SOCKET) {//add by tjq
+            std::cout << "Socket invalid, exiting ProcessData" << std::endl;
+            break;
+        }
+        int bytesRecv = recv(m_socket, buffer, sizeof(buffer), 0);
+        std::cout << "bytesRecv: " << bytesRecv << ", WSAGetLastError: " << WSAGetLastError() << std::endl;
+        if (bytesRecv > 0) {
+            if (m_onReceiveCallback) {
+                m_onReceiveCallback(m_socket, buffer, bytesRecv);
+            }
+        }
+        else if (bytesRecv == 0 || bytesRecv == SOCKET_ERROR) {
+            std::cout << "Disconnectstart1111111111111" << std::endl;
+            Disconnect(); // 行 97
+            std::cout << "Disconnectendl" << std::endl;
+            break;
+        }
+    }
+    std::cout << "CAsyncTCPClient::ProcessData: End" << std::endl;
+}
