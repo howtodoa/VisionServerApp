@@ -65,7 +65,7 @@ public:
 	//int DoActionRemoteFun(CommPorts portName, string funcName, HImages inputImages, HValues inputPrams, HImages& outputImages, HValues& outputPrams, int& errcode, string& errmsg);
 	bool DoActionLocalFun(string funcName, HImages inputImages, HValues inputPrams, HImages& outputImages, HValues& outputPrams, int& errcode, string& errmsg);
 
-	int DoActionRemoteFun(CommPorts portName, string funcName, HImages inputImages, HValues inputPrams, HImages& outputImages, HValues& outputPrams, int& errcode, string& errmsg, int Timeout=200);
+	int DoActionRemoteFun(CommPorts portName, string funcName, HImages inputImages, HValues inputPrams, HImages& outputImages, HValues& outputPrams, int& errcode, string& errmsg, int Timeout=2000);
 
 	Callbackfunc FindActionFun_Remote(string funcName);
 	Callbackfunc FindActionFun_Local(string funcName);

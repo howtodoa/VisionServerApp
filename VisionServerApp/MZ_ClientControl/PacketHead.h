@@ -204,6 +204,7 @@ typedef struct _ImageHead
 		this->length = length;
 	}
 }ImageHeader;
+
 typedef struct _HImage
 {
 	ImageHeader  imageHead;

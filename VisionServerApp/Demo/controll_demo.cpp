@@ -104,7 +104,7 @@ HImage LoadImageToHImage(const std::string& filePath) {
 
 
 // 启动客户端
-int main()
+int test_Client()
 {
     ClientOperation client;
 
@@ -146,7 +146,7 @@ int main()
 
 
 
-// 启动服务端
+//test_Service
 int test_Service()
 {
     Mz_ClientControl::ClientOperation server;
@@ -203,8 +203,8 @@ int test_Service()
 }
 
 
-
-int test_service_toQT()//test_service_toQT
+//test_service_toQT
+int test_service_toQT()
 {
     Mz_ClientControl::ClientOperation server;
 

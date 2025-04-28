@@ -166,6 +166,93 @@ void get_frame(HImages inputImages, HValues inputParams,
 
 }
 
+void pic_display_produce_ex(HImages inputImages, HValues inputParams,
+    HImages& outputImages, HValues& outputParams,
+    int& errcode, std::string& errmsg, int timeout)
+{
+    std::cout << "inputImages.getImageNums:   " << inputImages.getImageNums() << std::endl;
+
+#if 0
+    int width = 640;
+    int height = 480;
+    int channels = 3;  // 3 通道（RGB）
+    int imageDataLength = width * height * channels;  // 数据长度
+
+    // 分配内存
+    unsigned char* imageData = new unsigned char[imageDataLength];
+
+    std::srand(std::time(0));
+
+    // 填充图像数据（生成彩色图像）
+    for (int i = 0; i < imageDataLength; i += 3) {
+        imageData[i] = std::rand() % 256;       // R 通道（0-255）
+        imageData[i + 1] = std::rand() % 256;   // G 通道（0-255）
+        imageData[i + 2] = std::rand() % 256;   // B 通道（0-255）
+    }
+    // 创建 HImage 对象
+    HImage img(width, height, channels, imageDataLength, imageData);
+
+    delete[] imageData;
+
+    // 深拷贝文件数据到 img.data
+   // img.data = new unsigned char[fileSize];
+    //memcpy(img.data, buffer.data(), fileSize);
+
+    // 添加到输出列表
+    outputImages.m_Images.push_back(img);
+#endif
+
+    Mz_ClientControl::ClientOperation client;
+
+    CommPorts port;
+    port.isActAsServer = 0;  // 客户端
+    port.PortName = "PIC_PORT";
+    port.localhost_IP.IP = "127.0.0.1";
+    port.localhost_IP.Port = 8001;
+
+    client.InitSDK(port);
+    client.StartWork();
+
+    int width = 640;
+    int height = 480;
+    int channels = 3;  // 3 通道（RGB）
+    int imageDataLength = width * height * channels;  // 数据长度
+
+    // 分配内存
+    unsigned char* imageData = new unsigned char[imageDataLength];
+
+    std::srand(std::time(0));
+
+    // 填充图像数据（生成彩色图像）
+    for (int i = 0; i < imageDataLength; i += 3) {
+        imageData[i] = i % 256;       // R 通道（0-255）
+        imageData[i + 1] = i % 256;   // G 通道（0-255）
+        imageData[i + 2] = i % 256;   // B 通道（0-255）
+    }
+    // 创建 HImage 对象
+    HImage img(width, height, channels, imageDataLength, imageData);
+
+    delete[] imageData;
+
+    // 添加到输出列表
+    inputImages.m_Images.push_back(img);
+
+    HValues val1;
+    HValues val2;
+
+    val1.m_Values.push_back(HValue(1));
+    val1.m_Values.push_back(HValue(2));
+
+    client.DoActionFun(port, "pic_display_handle", val1, inputImages, &val2, &outputImages, &errcode, &errmsg, 10000);
+
+
+    // 设置返回值
+    errcode = 0;
+    errmsg = "图像读取成功";
+    std::cout << "成功读取图片，输出图片数量: " << outputImages.m_Images.size() << std::endl;
+}
+
+
 int init()
 {
 
@@ -291,4 +378,42 @@ int final()
 
     return 0;
 
+}
+
+int main()
+{
+    Mz_ClientControl::ClientOperation server;
+
+    CommPorts port;
+    port.isActAsServer = 1;
+    port.PortName = "PIC_PORT";
+    port.localhost_IP.IP = "127.0.0.1";
+    port.localhost_IP.Port = 8000;
+
+    server.InitSDK(port);
+
+    Callbackfunc cb;
+    cb.funcname = "pic_display_produce_ex";
+    cb.func = reinterpret_cast<FunctionTableStream>(pic_display_produce_ex);
+
+    cb.inputImagesnums = 1;
+    cb.inputPramsnums = 0;
+    cb.outputImagesnums = 1;
+    cb.outputPramsnums = 0;
+
+    server.RegsiterFunitFun(cb);
+    server.StartWork();
+
+    cout << "服务端8000已启动，等待客户端调用........" << endl;
+
+
+
+
+
+
+    while (true) {
+        Sleep(1000);
+    }
+
+    return 0;
 }
