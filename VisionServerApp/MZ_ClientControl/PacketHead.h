@@ -389,6 +389,7 @@ typedef struct _CommPorts
 	int isActAsServer; //是否作为服务端，0表示客户端，1表示服务端
 	std::string PortName;//注册端口名称
 	IPPort localhost_IP;//本机IP地址
+	IPPort remote_IP;     // 远端IP地址
 	void init()
 	{
 		isActAsServer = -1;

@@ -210,7 +210,7 @@ int CMsvServerComm::DoActionRemoteFun(CommPorts portName, string funcName, HImag
 	std::cout << "This line is in file: " << __FILE__ << ", line: " << __LINE__ << std::endl;
 	SOCKET sock = INVALID_SOCKET;
 	if (portName.isActAsServer == 0)
-		sock = GetSocketByIPAndPort(portName.localhost_IP.IP, portName.localhost_IP.Port);
+		sock = GetSocketByIPAndPort(portName.remote_IP.IP, portName.remote_IP.Port);
 	else
 		sock = GetSocketByfuncName(funcName);
 	if (sock == INVALID_SOCKET)
@@ -424,6 +424,7 @@ void* CMsvServerComm::InitSocks(CommPorts input)
 {
 	if (input.isActAsServer == 1)
 	{
+		// 服务端：监听本地
 		CAsyncTCPServer* tempSer = new CAsyncTCPServer(input.localhost_IP.Port);
 		tempSer->SetOnReceiveCallback(&OnRecvDataServer);
 		tempSer->SetOnConnectCallback(&OnConnectServer);
@@ -433,7 +434,8 @@ void* CMsvServerComm::InitSocks(CommPorts input)
 	}
 	else
 	{
-		CAsyncTCPClient* tempCli = new CAsyncTCPClient(input.localhost_IP.IP.c_str(), input.localhost_IP.Port);
+		// 客户端：连接远程
+		CAsyncTCPClient* tempCli = new CAsyncTCPClient(input.remote_IP.IP.c_str(), input.remote_IP.Port);
 		tempCli->SetOnReceiveCallback(&OnRecvDataClient);
 		tempCli->SetOnConnectCallback(&OnConnectClientState);
 		tempCli->Connect();

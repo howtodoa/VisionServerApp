@@ -66,6 +66,7 @@ void CAsyncTCPClient::Disconnect() {
     }
     std::cout << "CAsyncTCPClient::Disconnect: End" << std::endl;
 }
+
 bool CAsyncTCPClient::IsConnected()
 {
     return m_connected;
